@@ -1,10 +1,5 @@
 require 'rubygems'
 require 'yaml'
-require 'rss'
-require 'open-uri'
-
-url_template = 'http://eztvrss.it?show={#name}'
-
 
 def load_yaml(filename)
   if File.exists? filename
@@ -14,19 +9,22 @@ def load_yaml(filename)
   end
 end
 
-def show_hash(show_ary)
-  show_ary = show_ary || []
+def hash_on(item_ary)
+  item_ary = item_ary || []
   hash = {}
-  show_ary.each{|show| hash[show['name']] = show}
+  item_ary.each{|item| hash[item['name']] = item}
   hash
 end
 
 config = load_yaml 'config.yml'
-shows_from_history = show_hash(load_yaml('history.yml')['shows'])
-shows_from_config = show_hash(config['shows'])
 
-shows = shows_from_history.merge(shows_from_config)
+from_history = hash_on('name', load_yaml('history.yml')['items'])
+from_config = hash_on(config['items'])
 
-shows.each do |show_name, show|
+url_template = config['url_template'] | 'http://eztvrss.it?show={#name}'
+
+items = from_history.merge(from_config)
+
+items.each do |show_name, show|
   puts show_name, show.inspect
 end
