@@ -9,21 +9,21 @@ def load_yaml(filename)
   end
 end
 
-def hash_on(item_ary)
+def hash_on(key, item_ary)
   item_ary = item_ary || []
   hash = {}
-  item_ary.each{|item| hash[item['name']] = item}
+  item_ary.each{|item| hash[item[key]] = item}
   hash
 end
 
 config = load_yaml 'config.yml'
 
 from_history = hash_on('name', load_yaml('history.yml')['items'])
-from_config = hash_on(config['items'])
+from_config = hash_on('name', config['items'])
 
-url_template = config['url_template'] | 'http://eztvrss.it?show={#name}'
+url_template = config['url_template'] 
 
-items = from_history.merge(from_config)
+items = from_config.each{|name, item| item.merge!(from_history[name] || {})}
 
 items.each do |show_name, show|
   puts show_name, show.inspect
