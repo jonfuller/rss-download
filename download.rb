@@ -16,15 +16,11 @@ def hash_on(key, item_ary)
   hash
 end
 
-config = load_yaml 'config.yml'
+from_config = hash_on('url', load_yaml('config.yml')['feeds'])
+from_history = hash_on('url', load_yaml('history.yml')['feeds'])
 
-from_history = hash_on('name', load_yaml('history.yml')['items'])
-from_config = hash_on('name', config['items'])
+feeds = from_config.each{|url, item| item.merge!(from_history[url] || {})}
 
-url_template = config['url_template'] 
-
-items = from_config.each{|name, item| item.merge!(from_history[name] || {})}
-
-items.each do |show_name, show|
-  puts show_name, show.inspect
+feeds.each do |show_url, show|
+  puts show_url, show.inspect
 end
