@@ -2,6 +2,8 @@ require 'rubygems'
 require 'yaml'
 require 'rss'
 require 'open-uri'
+require 'logger'
+
 
 def load_yaml(filename)
   if File.exists? filename
@@ -41,8 +43,10 @@ def update_history(feed_history, last_timestamp, feed_url)
 end
 
 def download_item(item, i)
-  puts "  downloading #{i+1}/#{to_download.size} (#{item.date})"
+  logger.info "  downloading #{i+1}/#{to_download.size} (#{item.date})"
 end
+
+logger = Logger.new('downloader.log', 'weekly')
 
 config = load_yaml('config.yml')
 history = load_yaml('history.yml')
@@ -53,13 +57,13 @@ from_history = hash_on('url', history['feeds'])
 feeds = from_config.each{|url, item| item.merge!(from_history[url] || {})}
 
 feeds.each do |feed_url, feed|
-  puts "processing #{feed_url}"
+  logger.info "processing #{feed_url}"
 
   last_timestamp = Time.parse(feed['last_timestamp'] || '')
 
   rss = read_feed(feed_url)
   to_download = rss.items.select { |item| item.date > last_timestamp }
-  puts "  #{to_download.size} items to download since #{last_timestamp}"
+  logger.info "  #{to_download.size} items to download since #{last_timestamp}"
   to_download.reverse.each_with_index do |item, i|
     download_items(item, i)
   end
@@ -68,5 +72,5 @@ feeds.each do |feed_url, feed|
     history['feeds'] = update_history(history['feeds'], to_download.first.date, feed_url)
   end
 end
-puts "done"
+logger.info "done"
 save_yaml('history.yml', history)
