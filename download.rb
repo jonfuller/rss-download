@@ -48,9 +48,10 @@ def download_item(item, current, total, download_location, logger)
     logger.info "  Download location #{download_location} does not exist, creating..."
   end
   logger.info "  downloading #{current}/#{total} (#{item.date})"
+  `wget -P "#{download_location}" "#{item.enclosure.url}"`
 end
 
-logger = Logger.new('downloader.log', 'weekly')
+logger = Logger.new('log.log', 'weekly')
 
 config = load_yaml('config.yml')
 history = load_yaml('history.yml')
