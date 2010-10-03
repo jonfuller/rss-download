@@ -74,9 +74,10 @@ feeds.each do |feed_url, feed|
     download_item(item, i+1, to_download.size, config['download_location'], logger)
   end
 
-  if (to_download.any?)
-    history['feeds'] = update_history(history['feeds'], to_download.first.date, feed_url)
-  end
+  last_timestamp = to_download.first.date if to_download.any?
+
+  history['feeds'] = update_history(history['feeds'], last_timestamp, feed_url)
 end
+
 logger.info "done"
 save_yaml('history.yml', history)
