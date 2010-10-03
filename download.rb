@@ -32,6 +32,7 @@ def read_feed(url)
 end
 
 def update_history(feed_history, last_timestamp, feed_url)
+  feed_history = feed_history || []
   new_history = feed_history.reject{|item| item['url'] == feed_url}
 
   history_item = {}
