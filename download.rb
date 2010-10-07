@@ -6,7 +6,7 @@ require 'logger'
 
 class Downloader
   def initialize(working_dir = nil)
-    @working_dir = File.expand_path(working_dir) || File.expand_path(File.dirname(__FILE__))
+    @working_dir = File.expand_path(working_dir || File.dirname(__FILE__))
 
     unless File.exists?(@working_dir)
       puts "working directory does not exist.  creating."
@@ -121,5 +121,4 @@ class Downloader
   end
 end
 
-x = Downloader.new
-x.download
+Downloader.new().download
