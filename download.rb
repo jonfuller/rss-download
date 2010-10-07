@@ -17,6 +17,43 @@ class Downloader
     @logger.info("working directory: #{@working_dir}")
   end
 
+
+  def download()
+    unless File.exists?(config_file)
+      @logger.error("config file doesn't exist.  exiting.")
+      exit
+    end
+    
+    config = load_yaml(config_file)
+    history = load_yaml(history_file)
+
+    feeds = load_feeds(config, history)
+    download_location = config['download_location']
+
+    @logger.info "download location: #{download_location}"
+    feeds.each do |feed_url, feed|
+      @logger.info "processing #{feed_url}"
+
+      last_timestamp = Time.parse(feed['last_timestamp'] || '')
+
+      rss = read_feed(feed_url)
+      to_download = rss.items.select { |item| item.date > last_timestamp }
+      @logger.info "  #{to_download.size} items to download since #{last_timestamp}"
+      to_download.reverse.each_with_index do |item, i|
+        download_item(item, i+1, to_download.size, download_location)
+      end
+
+      last_timestamp = to_download.first.date if to_download.any?
+
+      history['feeds'] = update_history(history['feeds'], last_timestamp, feed_url)
+    end
+
+    @logger.info "done"
+    save_yaml('history.yml', history)
+  end
+
+  private
+
   def config_file
     get_filename('config.yml')
   end
@@ -36,40 +73,6 @@ class Downloader
     from_config.each{|url, item| item.merge!(from_history[url] || {})}
   end
 
-  def download()
-    unless File.exists?(config_file)
-      @logger.error("config file doesn't exist.  exiting.")
-      exit
-    end
-    
-    config = load_yaml(config_file)
-    history = load_yaml(history_file)
-
-    feeds = load_feeds(config, history)
-
-    @logger.info "download location: #{config['download_location']}"
-    feeds.each do |feed_url, feed|
-      @logger.info "processing #{feed_url}"
-
-      last_timestamp = Time.parse(feed['last_timestamp'] || '')
-
-      rss = read_feed(feed_url)
-      to_download = rss.items.select { |item| item.date > last_timestamp }
-      @logger.info "  #{to_download.size} items to download since #{last_timestamp}"
-      to_download.reverse.each_with_index do |item, i|
-        download_item(item, i+1, to_download.size, config['download_location'])
-      end
-
-      last_timestamp = to_download.first.date if to_download.any?
-
-      history['feeds'] = update_history(history['feeds'], last_timestamp, feed_url)
-    end
-
-    @logger.info "done"
-    save_yaml('history.yml', history)
-  end
-
-  private
   def load_yaml(filename)
     if File.exists? filename
       YAML.load_file filename
