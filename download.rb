@@ -5,18 +5,47 @@ require 'open-uri'
 require 'logger'
 
 class Downloader
-  def initialize()
-    @logger = Logger.new('log.log', 'weekly')
+  def initialize(working_dir = nil)
+    @working_dir = File.expand_path(working_dir) || File.expand_path(File.dirname(__FILE__))
+
+    unless File.exists?(@working_dir)
+      puts "working directory does not exist.  creating."
+      Dir.mkdir(@working_dir)
+    end
+
+    @logger = Logger.new(get_filename('log.log'), 'weekly')
+    @logger.info("working directory: #{@working_dir}")
+  end
+
+  def config_file
+    get_filename('config.yml')
+  end
+
+  def history_file
+    get_filename('history.yml')
+  end
+
+  def get_filename(filename)
+    File.join(@working_dir, filename)
+  end
+
+  def load_feeds(config_hash, history_hash)
+    from_config = hash_on('url', config_hash['feeds'])
+    from_history = hash_on('url', history_hash['feeds'])
+
+    from_config.each{|url, item| item.merge!(from_history[url] || {})}
   end
 
   def download()
-    config = load_yaml('config.yml')
-    history = load_yaml('history.yml')
+    unless File.exists?(config_file)
+      @logger.error("config file doesn't exist.  exiting.")
+      exit
+    end
+    
+    config = load_yaml(config_file)
+    history = load_yaml(history_file)
 
-    from_config = hash_on('url', config['feeds'])
-    from_history = hash_on('url', history['feeds'])
-
-    feeds = from_config.each{|url, item| item.merge!(from_history[url] || {})}
+    feeds = load_feeds(config, history)
 
     @logger.info "download location: #{config['download_location']}"
     feeds.each do |feed_url, feed|
