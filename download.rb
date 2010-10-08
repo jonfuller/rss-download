@@ -40,7 +40,10 @@ class Downloader
       to_download = rss.items.select { |item| item.date > last_timestamp }
       @logger.info "  #{to_download.size} to download #{last_timestamp}"
       to_download.reverse.each_with_index do |item, i|
-        download_item(item, i+1, to_download.size, download_location)
+        downloaded = download_item(item, i+1, to_download.size, download_location)
+        unless downloaded
+          @logger.error("  problem downloading #{item}")
+        end
       end
 
       last_timestamp = to_download.first.date if to_download.any?
@@ -116,8 +119,8 @@ class Downloader
       Dir.mkdir(download_location)
       @logger.info "  Download location #{download_location} does not exist, creating..."
     end
-    @logger.info "  downloading #{current}/#{total} (#{item.date})"
-    `wget -P "#{download_location}" "#{item.enclosure.url}"`
+    @logger.info "  downloading #{current}/#{total} (#{item.enclosure.url})"
+    system("wget --content-disposition -P \"#{download_location}\" \"#{item.enclosure.url}\"")
   end
 end
 
