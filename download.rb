@@ -38,7 +38,7 @@ class Downloader
 
       rss = read_feed(feed_url)
       to_download = rss.items.select { |item| item.date > last_timestamp }
-      @logger.info "  #{to_download.size} items to download since #{last_timestamp}"
+      @logger.info "  #{to_download.size} to download #{last_timestamp}"
       to_download.reverse.each_with_index do |item, i|
         download_item(item, i+1, to_download.size, download_location)
       end
