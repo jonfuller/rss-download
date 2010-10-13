@@ -42,7 +42,7 @@ class Downloader
       to_download.reverse.each_with_index do |item, i|
         downloaded = download_item(item, i+1, to_download.size, download_location)
         unless downloaded
-          @logger.error("  problem downloading #{item}")
+          @logger.error("  problem downloading Description:#{item.description}  Link:#{item.enclosure.url}")
         end
       end
 
