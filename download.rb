@@ -52,7 +52,7 @@ class Downloader
     end
 
     @logger.info "done"
-    save_yaml('history.yml', history)
+    save_yaml(history_file, history)
   end
 
   private
